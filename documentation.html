@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Gossip Dialogue Engine Documentation</title>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet"> 
+        <style>
+            body {
+                margin: 200px;
+                font-family: 'Playfair Display', serif;
+            }
+
+            table {
+                width: 100%;
+                table-layout: fixed;
+                border: 1px solid black;
+                font-size: 12px;
+            }
+
+            h1 {
+                text-align: center;
+            }
+
+            th {
+                border: 1px solid gray;
+                overflow: hidden;
+            }
+
+            td {
+                overflow: hidden;
+                border-right: 1px solid gray;
+                border-bottom: 1px solid gray;
+            }
+
+            hr {
+                align-content: center;
+                width: 60%;
+            }
+
+            .description {
+                font-size: 11px;
+            }
+
+            .table_small {
+                width: 200px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>
+            Gossip Dialogue Engine Documentation
+        </h1>
+
+        <br>
+
+        <p>
+            This is a document outlining the functionality and structure of the Gossip Dialogue Engine for GMS2.2+. In here you'll find code explanations, read how-to's, and hopefully leave with a better idea of how to customize everything to your liking. Things can get pretty complex, as I do have my own way of formatting code and implementing data structures... so I ask you, before you change any of the mechanisms of the engine, please refer to this document. If anything is unclear or requires further explanation, feel free to reach me at <b>mgmt@brainfoam.online</b>, or my discord, <b>brainfoam#9999</b>.
+        </p>
+
+        <br>
+
+        <h2>
+            The Breakdown
+        </h2>
+        <p>
+            Features:
+            <ul>
+                <li>Fully editable graphics</li>
+                <li>Support for .TTF fonts and image fonts</li>
+                <li>External text-editing through .CSV</li>
+                <li>Live inline variables</li>
+                <li>Text effects</li>
+                <li>Custom commands</li>
+                <li>Run scripts through dialogue</li>
+                <li>Opening/closing animations</li>
+            </ul>
+            So, while the engine may seem a bit intimidating at first, it relies on only a few parts that allow it to function. If I were to categorize them, it would be the <i>user input, the infrastructure, and the graphics.</i> The <i>user input</i> is the information given by the user to the engine, to be processed and called upon during the game's runtime. For now, this data is stored as a .csv file in the game's included files. It is assumed that this one .csv file contains all the dialogue in your game, but the engine can easily be adjusted to handling more than one dialogue sheet (say, one per area in your game). We'll cover this later. The second structure, the <i>infrastructure</i>, is the code behind the scenes making this engine work. How much of an understanding you want of the code is entirely up to you, but I encourage you to have at least a brief understanding of how everything works in order to start customizing it to your liking. The last structure, the <i>graphics</i>, is purely the output you see on the screen when the project is run and the dialogue engine is working. This includes the textbox, the portrait, namebox, and answerbox. The graphics are entirely responsive to the data that you give it, so no need to worry about adding line breaks in your dialogue or properly sizing the answer box.
+        </p>
+
+        <br><hr><br>
+
+        <h2>
+            User Input
+        </h2>
+        <p>
+            <h3>
+                What is a .csv file?
+            </h3>
+            <p>
+                Simply put, a .csv file contains "comma-seperated values" (hence, csv). You can think of this file as a big grid, which is great for storing a lot of data in rows and columns. This is perfect for what we need, since you can think of a conversation in terms of "rows and columns." What I mean by that is, the individual facets of a conversation can be represented by columns, and the rows represent each entry in a conversation. Here's a look at how a conversation is interpreted in the dialogue engine:
+            </p>
+
+            <p>Example.csv</p>
+            <table>
+                <tr>
+                    <th>Message ID</th>
+                    <th>Portrait Name</th>
+                    <th>Sound Name</th>
+                    <th>Name</th>
+                    <th>Text</th>
+                    <th>Commands</th>
+                    <th>Is Question</th>
+                    <th>Options</th>
+                    <th>Go-To ID</th>
+                </tr>
+                <tr>
+                    <td>M_Start</td>
+                    <td>spr_person_1</td>
+                    <td>snd_person_1</td>
+                    <td>Person 1</td>
+                    <td>Hello!</td>
+                    <td>scr_p1_wave()</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>spr_person_1</td>
+                    <td>snd_person_1</td>
+                    <td>Person 1</td>
+                    <td>How are you?</td>
+                    <td>scr_p1_idle()</td>
+                    <td>Y</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Good!</td>
+                    <td>Ans_Good</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Alright.</td>
+                    <td>Ans_OK</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Not great.</td>
+                    <td>Ans_Bad</td>
+                </tr>
+                <tr>
+                    <td>Ans_Good</td>
+                    <td>spr_person_1</td>
+                    <td>snd_person_1</td>
+                    <td>Person 1</td>
+                    <td>Good to hear!</td>
+                    <td>END&scr_p1_smile()</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Ans_OK</td>
+                    <td>spr_person_1</td>
+                    <td>snd_person_1</td>
+                    <td>Person 1</td>
+                    <td>Ah, that's good.</td>
+                    <td>END</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Ans_Bad</td>
+                    <td>spr_person_1</td>
+                    <td>snd_person_1</td>
+                    <td>Person 1</td>
+                    <td>Sorry to hear that!</td>
+                    <td>END&scr_p1_frown()</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+                
+            <p class="description">
+                This is how the .csv is formatted. Your editor may not show the values in such nicely organized columns, which is why I encourage you to use some kind of spreadsheet editor (Excel, LibreOffice, CSVPad) to edit the values & resize column widths to your liking. I would avoid using Notepad, Notepad++ (Unless you have some kind of fancy plugin that isn't TextFX), and other general text editors).
+            </p>
+
+            <p>
+                So, lets go through how this works. Each row in the table is a dialogue entry, while each column is a piece of data <i>for</i> that entry. That being said, when a conversation is started at "M_Start", the message that you will see in the textbox would be "Hello!". If the user proceeds the text, If the entry is not a question and the Go-To ID field is blank, the engine will simply move on to the next line. However, if it <i>is</i> a question, it will look for entries in the <i>Options</i> field until there are none. These are the "answers" that the user can select. The fields next to them in the "Go-To ID" column represent the messages that the conversation will be taken to. For instance, if the user selects "Good!", the conversation will then be continued starting from "Ans_Good", which you can see on the leftmost column. Now, let's go over what each column is, and why they are important:
+            </p>
+
+            <h3>
+                Message ID
+            </h3>
+            <p>
+                This field is a necessary part of the dialogue's data, since this is where you can (in code) tell the dialogue engine to start a conversation from, or point a conversation to. That being said, not every message needs a message ID - only those of signifigance need a unique ID to be pointed to. For instance, the first words coming from an NPC you talk to will need a Message ID since you want to <i>start</i> the dialogue there, but if the NPC keeps talking on and on, each one of the messages after the first won't need an ID (unless, of course, you want the conversation to start from one of those lines in the future).
+            </p>
+
+            <h3>
+                Portrait Name
+            </h3>
+            <p>
+                This field represents the name of the asset in GameMaker that the engine will try and pull for the message's portrait. So, if you have a sprite named "spr_guy_1", you'll want to put that same name in the Portrait Name field.
+            </p>
+
+            <h3>
+                Sound Name
+            </h3>
+            <p>
+                This functions the same as the Portait Name field, except it expects the name of a sound asset rather than a sprite. This sound will be played every "blip" of the textbox as it reads out the message, so make sure it's something short!
+            </p>
+
+            <h3>
+                Name
+            </h3>
+            <p>
+                Simply, this is the name of the person who is talking.
+            </p>
+            
+            <h3>
+                Text
+            </h3>
+            <p>
+                This is the message's text: what the player will see being printed to the game screen. This field is only for the message text, text commands, and inline variables.
+            </p>
+
+            <h3>
+                Commands
+            </h3>
+            <p>
+                This field is for commands - if a real command is detected (i.e, having parentheses), the engine will search for a script asset in GameMaker that matches the name of that command. Scripts called from here only support up to 2 parameters, so be careful. If a script-based command is not found, it will be assumed that it is a shorthand command that is defined through code. The only command that is pre-implemented is "END", which depicts the end of a conversation (when the user proceeds, the textbox is flushed and destroyed). More commands can be added in the engine's "parse_custom_commands()" script. Commands are delimited through the ampersand symbol (&), and can be a mix of both shorthand commands and actual scripts.
+            </p>
+
+            <h3>
+                Is Question
+            </h3>
+            <p>
+                If anything is in this field, it will be assumed that the message is a question and will begin scanning for options starting from the next line. If the message is not a question, leave this field blank.
+            </p>
+
+            <h3>
+                Options
+            </h3>
+            <p>
+                These are the "responses" that the user can select once a question is asked. Think of them as answers. When there are no more of these options during a question-initiated scan, it will end the scan. 
+            </p>
+
+            <h3>
+                Go-To ID
+            </h3>
+            <p>
+                This field represents the ID of the message that this entry goes to. If this field is filled out next to a dialogue option, selecting that option in-game will result in the conversation going to the Message ID of this field. However, if this field is filled out alongside a normal message, the engine will no longer go to the next line and instead follow where this field takes it. This is really handy for conversation-loops, and to not rewrite old conversations if they have to come up again.
+            </p>
+
+            <br>
+
+            <p>
+                That covers all the data that you, as a developer, are responsible for providing. I'll include a template .csv file with column headers so you can use that as a starting point. If you name your CSV file as something other than "Dialogue.csv", you'll want to rename the parameter in the csv_load function within the obj_dialogue_parser's create event.
+            </p>
+            
+        </p>
+
+        <br><hr><br>
+
+        <h2>
+            Infrastructure
+        </h2>
+        <p>
+            So, lets go over how this engine actually functions. There are three objects that are necessary for the engine to function as well as some scripts that serve as important cogs in the machine.
+            
+            <h3>
+                obj_dialogue_parser
+            </h3>
+            <p>
+                This object acts as a container for the dialogue information. This object <b>must be created at runtime</b>, whether it be in your titlescreen, first room, or so on. This is a persistant object that creates two globally accessible variables that are vital for the engine to run, so keep that in mind. As far as what the object actually does, it creates containers for the dialogue data and fills them with the data in the .csv file you provide. There is the <i>global.dialogue</i>, which is a ds_grid identical to that of your .csv file, and then there is the <i>global.id_cache</i> which is an efficiency booster. If the table above in the previous section is the global.dialogue object, then a comparable global.id_cache object would look like this:
+            </p>
+
+            <table class="table_small">
+                <tr>
+                    <th>Message ID</th>
+                    <th>Line Number</th>
+                </tr>
+                <tr>
+                    <td>M_Start</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>Ans_Good</td>
+                    <td>6</td>
+                </tr>
+                <tr>
+                    <td>Ans_OK</td>
+                    <td>7</td>
+                </tr>
+                <tr>
+                    <td>Ans_Bad</td>
+                    <td>8</td>
+                </tr>
+            </table>
+
+            <p>
+                The point of this table is to speed up lookup times. In a dialogue sheet of over 10,000 entries, there may only be 300-400 message ID's, so the amount of lookup being done is cut signifigantly. This isn't a necessary element to understand for customizing the dialogue engine, but if you want to add functionality for reading from multiple .csv files, you may need multiple id caches as well. Aside from filling and holding those two data structures, this object serves no other purpose.
+            </p>
+
+            <h3>
+                obj_textbox
+            </h3>
+            <p>
+                This object represents the textbox itself, and contains all the logic for displaying your dialogue to the screen. The inner workings of this get a bit complicated, but it's mostly unimportant since the only thing you'll need to change are the variables in the create event. The variables are commented describing their use-case, and they're generally pretty straight forward. I urge you to <b>only</b> edit the variables under the <i>Editable Parameters</i> region, as the rest are used for specific checks and bounds within the engine and shouldn't be tampered with.
+            </p>
+        </p>
+
+        <br><hr><br>
+
+        <h2>
+            FAQ - How do I...
+        </h2>
+        <p>
+            <h3>
+                Move something, change margins, padding, etc...
+            </h3>
+            <p>
+                A: All the variables for altering the visuals of the textbox are held within the obj_textbox object's create event.
+            </p>
+
+            <h3>
+                Change the font from a real font to a sprite font?
+            </h3>
+            <p>
+                A: You want to toggle the <b>real_font</b> variable in the obj_textbox's create event from <i>true</i> to <i>false</i>. Instead of using the <b>real_font_index</b> as the font source, it will instead use the <b>font_index</b> and use sprite-drawing to draw to the text surface. to change it back, simply toggle the variable again.
+            </p>
+
+            <h3>
+                Animate a character's portrait?
+            </h3>
+            <p>
+                A: Simply add frames to the character's sprite, and alter the <b>portrait_speed</b> variable in the obj_textbox's create event to change the speed at which it animates. Lower is faster, higher is slower. if the sprite has only 1 frame, it simply won't animate.
+            </p>
+
+            <h3>
+                Add a new text effect?
+            </h3>
+            <p>
+                A: Create a new command variable in obj_textbox's create event - preferably with the prefix "cmd_". You then want to add this command to the script "parse_effect_commands" - simply follow the way that other commands are added. The string inside the "case" statements are what you're going to need to type in the .csv file for the effect to work, so make sure to keep it short and sweet. Next, you're going to need to add the command to the apply_text_effects script. Here, you're actually altering the variable inside the text effect object. If the command you're adding is a color command, simply add the color command and set the proper color field. If it is a new, original effect, however, you'll need to add a command variable to the text_effect object too. You can implement the effect inside the text_effect object's step code.
+            </p>
+
+            <h3>
+                Change the style of the textbox?
+            </h3>
+            <p>
+                A: You'll want to change the sprite spr_window_design. This sprite, by default, represents a 3x3 grid of tiles that are used to draw windows. If your window, however, requires a different resolution per-grid size (default is 8 pixels), you'll need to redefine the variabe "window_grid_size" inside the textbox object. This represents the size of each "cell", so 1/3 of the width and height of your window sprite.
+            </p>
+
+            <h3>
+                Make my own sprite font?
+            </h3>
+            <p>
+                A: If you want to conform to the size of the default sprite font, all you'll need to do is change the letters themselves within the font's sprite (by default, spr_font).
+            </p>
+
+            
+        </p>
+
+    </body>
+</html>
